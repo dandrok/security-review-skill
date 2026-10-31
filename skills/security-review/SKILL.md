@@ -1,10 +1,10 @@
 ---
 name: security-review
-description: "Security review of a web codebase, diff, or PR: find vulnerabilities that violate a real trust boundary, with source evidence, severity, and the smallest effective fix. Primarily TS/JS web apps — React/Next, Express/Fastify/Hono/Nest, Postgres/SQLite/MySQL — other stacks at sink level. Use for security questions, threat models, pre-merge review, secret/dependency audits, AI/LLM and MCP code. Write audit artifacts only when explicitly asked."
+description: "Use when reviewing code for exploitable holes."
 license: MIT
 compatibility: [claude-code, antigravity, antigravity-cli, opencode, codex, gemini-cli, cursor, hermes]
 metadata:
-  version: 1.2.0
+  version: 1.2.1
   author: dandrok
   source: https://github.com/dandrok/security-review-skill
   frameworks: [OWASP-ASVS-5.0, OWASP-LLM-Top10-2025, OWASP-Agentic-Top10-2026, CWE]
