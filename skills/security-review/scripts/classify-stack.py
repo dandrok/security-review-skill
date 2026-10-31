@@ -22,11 +22,18 @@ SKIP_DIRS = {
 
 # signal -> (pack, human label)
 SIGNALS = {
-    "references/client-react.md": [
+    "references/client-web.md": [
         ("*.tsx", "React/TSX components"),
         ("*.jsx", "React/JSX components"),
+        ("*.vue", "Vue components"),
+        ("*.svelte", "Svelte components"),
+        ("svelte.config.*", "SvelteKit"),
+        ("nuxt.config.*", "Nuxt"),
+        ("**/+page.server.ts", "SvelteKit server load/actions"),
+        ("**/+server.ts", "SvelteKit endpoints"),
         ("next.config.*", "Next.js"),
         ("vite.config.*", "Vite"),
+        ("**/+layout.server.ts", "SvelteKit server layout"),
         ("src/App.tsx", "React SPA"),
         ("app/**/page.tsx", "Next App Router"),
         ("pages/**/*.tsx", "Next Pages Router"),
@@ -107,6 +114,80 @@ SIGNALS = {
     ],
 }
 
+
+# Framework names in a manifest -> pack. Filenames lie: a Svelte or Nest repo can
+# look like plain TypeScript until you read the dependencies.
+DEP_SIGNALS = {
+    "references/client-web.md": {
+        "react", "react-dom", "next", "vue", "nuxt", "svelte", "@sveltejs/kit",
+        "vite", "@remix-run/react", "gatsby", "astro",
+    },
+    "references/server-node.md": {
+        "express", "fastify", "hono", "@nestjs/core", "koa", "@trpc/server",
+    },
+    "references/sql-and-data.md": {
+        "drizzle-orm", "drizzle-kit", "prisma", "@prisma/client", "knex", "typeorm",
+        "sequelize", "@supabase/supabase-js", "pg", "mysql2", "better-sqlite3",
+        "sqlite3", "@libsql/client",
+    },
+    "references/auth-and-sessions.md": {
+        "jsonwebtoken", "jose", "next-auth", "@auth/core", "passport", "lucia",
+        "better-auth", "@clerk/nextjs", "express-session", "@fastify/jwt",
+    },
+    "references/ai-and-llm.md": {
+        "openai", "@anthropic-ai/sdk", "langchain", "@modelcontextprotocol/sdk",
+        "ai", "@ai-sdk/openai", "llamaindex",
+    },
+}
+PY_DEP_SIGNALS = {
+    "django": "references/api-and-injection.md",
+    "djangorestframework": "references/api-and-injection.md",
+    "fastapi": "references/api-and-injection.md",
+    "flask": "references/api-and-injection.md",
+    "sqlalchemy": "references/sql-and-data.md",
+    "psycopg2": "references/sql-and-data.md",
+    "psycopg2-binary": "references/sql-and-data.md",
+    "asyncpg": "references/sql-and-data.md",
+}
+
+
+def read_deps(root: str) -> set[str]:
+    """Dependency names from package.json, requirements.txt, pyproject.toml."""
+    import json
+    import re as _re
+
+    names: set[str] = set()
+    pkg = os.path.join(root, "package.json")
+    if os.path.isfile(pkg):
+        try:
+            data = json.load(open(pkg, encoding="utf-8"))
+            for key in ("dependencies", "devDependencies", "peerDependencies"):
+                names.update(data.get(key) or {})
+        except Exception:
+            pass
+    for req in ("requirements.txt", "requirements-dev.txt"):
+        path = os.path.join(root, req)
+        if os.path.isfile(path):
+            try:
+                for line in open(path, encoding="utf-8", errors="ignore"):
+                    line = line.strip().lower()
+                    m = _re.match(r"^([a-z0-9._-]+)", line)
+                    if m and not line.startswith("#"):
+                        names.add(m.group(1))
+            except Exception:
+                pass
+    py = os.path.join(root, "pyproject.toml")
+    if os.path.isfile(py):
+        try:
+            text = open(py, encoding="utf-8", errors="ignore").read().lower()
+            for dep in PY_DEP_SIGNALS:
+                if f'"{dep}' in text or f"'{dep}" in text:
+                    names.add(dep)
+        except Exception:
+            pass
+    return names
+
+
 PACK_ALWAYS = "references/reporting.md"
 
 
@@ -152,6 +233,7 @@ def main() -> int:
         return 2
 
     files = walk(root)
+    deps = read_deps(root)
     # Cheap size guard for big trees
     found: dict[str, list[str]] = {}
     for pack, sigs in SIGNALS.items():
@@ -160,6 +242,9 @@ def main() -> int:
             n = sum(1 for f in files if match(f, pattern))
             if n:
                 hits.append(f"{label} ({n})")
+        dep_hits = sorted(d for d in deps if d in DEP_SIGNALS.get(pack, set()))
+        if dep_hits:
+            hits.append("deps: " + ", ".join(dep_hits))
         if hits:
             found[pack] = hits
 
@@ -191,7 +276,7 @@ def main() -> int:
     for pack in packs[:4]:
         print(f"  {pack}")
     if len(packs) > 4:
-        print(f"  (skipping {', '.join(p.split('/')[-1] for p in packs[4:])} — no signal strong enough)")
+        print(f"  (over the 4-pack cap: {', '.join(p.split('/')[-1] for p in packs[4:])})")
     print(f"\nAlways: {PACK_ALWAYS}")
     print("\nState the selection in one line before hunting.")
     return 0

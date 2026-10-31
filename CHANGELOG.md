@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.2.0 — 2026-10-31
+
+Routing accuracy for frontend stacks that are not React, plus dependency-aware detection.
+
+- **`client-react.md` -> `client-web.md`** and new sections for **Vue 3 / Nuxt**
+  (`v-html`, `runtimeConfig.public`, `server/api` handlers, `useAsyncData` hydration,
+  `navigateTo` open redirect, `routeRules` caching) and **Svelte 5 / SvelteKit**
+  (`{@html}`, `+page.server.ts` load leaks, form actions as public endpoints,
+  `hooks.server.ts` is not authz, `csrf.checkOrigin`, `PUBLIC_` env, `+server.ts`).
+- **`classify-stack.py` reads manifests**, not just filenames: `package.json`
+  dependencies, `requirements.txt`, `pyproject.toml`. A Svelte, Nest or Drizzle repo
+  that looks like plain TypeScript now routes correctly.
+- New file signals: `*.vue`, `*.svelte`, `svelte.config.*`, `nuxt.config.*`,
+  `+page.server.ts`, `+server.ts`, `+layout.server.ts`.
+
 ## 1.1.0 — 2026-10-31
 
 Backend and data-layer coverage, so the skill stops going shallow outside Next.js.

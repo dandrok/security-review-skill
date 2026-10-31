@@ -16,7 +16,7 @@ Secrets are different from other findings: the fix is rotation plus removal, in 
 | CI | `set -x`, `echo $SECRET`, secrets in build args, artifact upload of `.env` | workflow YAML |
 | Container images | `ENV SECRET=...`, `COPY .env`, layer history | `docker history`, Dockerfile |
 | Public repos/pastes | `.env.example` with real values, notebook outputs, test fixtures with real keys | full-tree entropy scan |
-| Client-side storage / URLs | token in query param → Referer, screenshots, shared links | see `client-react.md` |
+| Client-side storage / URLs | token in query param → Referer, screenshots, shared links | see `client-web.md` |
 
 ## Entropy and pattern scan
 

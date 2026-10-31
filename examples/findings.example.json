@@ -7,7 +7,7 @@
   },
   "mode": "audit",
   "generated_at": "2026-10-31T12:00:00Z",
-  "packs": ["client-react", "auth-and-sessions", "secrets-and-config"],
+  "packs": ["client-web", "auth-and-sessions", "secrets-and-config"],
   "findings": [
     {
       "id": "SR-001",

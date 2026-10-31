@@ -48,7 +48,7 @@ Rules: `needs_validation` has **no severity** — the missing fact decides it. N
   "target": {"name": "acme-web", "revision": "git:4f2a1c9", "scope": ["apps/web", "packages/api"]},
   "mode": "review",
   "generated_at": "2026-10-31T12:00:00Z",
-  "packs": ["client-react", "auth-and-sessions"],
+  "packs": ["client-web", "auth-and-sessions"],
   "findings": [
     {
       "id": "SR-001",

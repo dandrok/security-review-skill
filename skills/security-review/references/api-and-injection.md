@@ -60,7 +60,7 @@ Fix: bound parameters for values, allowlist maps for identifiers, a single data-
 ## Template, HTML, and encoding
 
 - **SSTI:** user data passed as the *template* rather than as a variable (`ejs.render(userStr)`, `Handlebars.compile(input)`, `render_template_string`, Jinja `Template(...)`). Data belongs in the context argument.
-- **XSS is a sink mismatch** — see `client-react.md`; here the server-side cases are: echoing `req.query` into an HTML error page, `res.send('<h1>' + name)` without escaping, JSON served as `text/html`.
+- **XSS is a sink mismatch** — see `client-web.md`; here the server-side cases are: echoing `req.query` into an HTML error page, `res.send('<h1>' + name)` without escaping, JSON served as `text/html`.
 - **Header injection:** any request value written into a header must reject `\r`/`\n` (Node's `setHeader` throws, `res.writeHead` with a raw object may not).
 - **Log injection:** user input into logs without newline stripping — forges audit lines. Same class, low severity, still worth a line.
 

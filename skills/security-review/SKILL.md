@@ -4,7 +4,7 @@ description: "Security review of a web codebase, diff, or PR: find vulnerabiliti
 license: MIT
 compatibility: [claude-code, antigravity, antigravity-cli, opencode, codex, gemini-cli, cursor, hermes]
 metadata:
-  version: 1.1.0
+  version: 1.2.0
   author: dandrok
   source: https://github.com/dandrok/security-review-skill
   frameworks: [OWASP-ASVS-5.0, OWASP-LLM-Top10-2025, OWASP-Agentic-Top10-2026, CWE]
@@ -20,7 +20,7 @@ The hard part of AI security review is not finding suspicious code — it is not
 
 | | |
 |---|---|
-| **Strong** | TS/JS web apps: React/Next/Vite clients, Express / Fastify / Hono / Nest backends, Postgres / SQLite / MySQL data layers, plus auth, secrets, supply chain, cloud and deploy config, AI/LLM and MCP code |
+| **Strong** | TS/JS web apps: React/Next, Vue/Nuxt, Svelte/SvelteKit clients, Express / Fastify / Hono / Nest backends, Postgres / SQLite / MySQL data layers, plus auth, secrets, supply chain, cloud and deploy config, AI/LLM and MCP code |
 | **Generic only** | Python (Django/DRF, FastAPI, Flask), Go, PHP, Ruby, Java — the injection sink list and the auth / secrets / supply-chain packs apply; framework-specific authorization semantics do not |
 | **Not covered** | native and binary code, mobile, embedded, .NET, kernel, and anything that needs exploitation beyond a local proof |
 
@@ -59,7 +59,7 @@ If the script cannot run, use the signals column below. Then read **at most four
 |---|---|
 | `express`/`fastify`/`hono`/`@nestjs/*` in deps, `@Controller(`, `*.module.ts`, `*.guard.ts`, `server.ts` | `references/server-node.md` |
 | `schema.prisma`, `drizzle.config.*`, `knexfile.*`, `*.sql`, `migrations/`, `supabase/`, `*.db`/`*.sqlite`, raw query calls | `references/sql-and-data.md` |
-| `package.json` with react/next/vite, `*.tsx`, `app/`, `pages/` | `references/client-react.md` |
+| react/next/vue/nuxt/svelte deps, `*.tsx`/`*.vue`/`*.svelte`, `app/`, `pages/`, `+page.server.ts` | `references/client-web.md` |
 | HTTP handlers, routes, controllers, GraphQL/RPC schema, `express`/`fastify`/`hono`/Django/DRF/Laravel/Go net/http | `references/api-and-injection.md` |
 | Login, session, JWT, OAuth, cookies, RBAC/roles, multi-tenant columns, `middleware.ts` | `references/auth-and-sessions.md` |
 | `.env*`, config files, Dockerfile, CI YAML, logger/telemetry setup | `references/secrets-and-config.md` |
@@ -69,7 +69,7 @@ If the script cannot run, use the signals column below. Then read **at most four
 
 Also read `references/reporting.md` once, when you are about to write findings in review or audit mode.
 
-State the selection out loud in one line: `Packs: client-react, auth-and-sessions (skipped: cloud, ai — no infra or LLM code)`.
+State the selection out loud in one line: `Packs: client-web, auth-and-sessions (skipped: cloud, ai — no infra or LLM code)`.
 
 ## Step 2 — Map trust boundaries before hunting
 
@@ -185,7 +185,7 @@ python3 scripts/validate-findings.py .security-review/findings.json    # exit 1 
 |---|---|
 | `references/api-and-injection.md` | injection, SSRF, traversal, upload, mass assignment, headers/CORS |
 | `references/auth-and-sessions.md` | authn, sessions/JWT/OAuth, IDOR, tenants, RBAC, middleware |
-| `references/client-react.md` | React/Next/Vite, RSC, server actions, XSS, tokens in browser, CSP |
+| `references/client-web.md` | React/Next, Vue/Nuxt, Svelte/SvelteKit: XSS sinks, server→client leaks, actions, tokens, CSP |
 | `references/secrets-and-config.md` | env files, client bundles, logs/telemetry, CI, container config |
 | `references/supply-chain.md` | lockfiles, install scripts, registry publishing, CI permissions |
 | `references/cloud-and-deploy.md` | IAM, buckets, DB exposure, containers, headers, metadata SSRF |

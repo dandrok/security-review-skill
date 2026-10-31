@@ -1,6 +1,7 @@
 # Pack: Client / React / Next.js
 
-Applies to React 18/19, Next.js (App Router and Pages), Vite SPAs, and any bundled frontend.
+Applies to React 18/19, Next.js (App Router and Pages), Vite SPAs, Vue 3 / Nuxt, and Svelte 5 / SvelteKit.
+Read the React sections for the invariants, then the Vue/Svelte sections for that framework's sinks.
 
 Browser-side findings are mostly about **two trust errors**: treating the browser as a security boundary, and trusting data that crossed from server to client (or back).
 
@@ -93,6 +94,32 @@ Also: **DOM clobbering** on `name`/`id` collisions with globals, and **mutation 
 - `Sentry.init({ sendDefaultPii: true })`, `beforeSend` not scrubbing headers/cookies.
 - Scripts loaded without SRI from a CDN; `integrity` absent on third-party `<script>`.
 - Tag managers on authenticated pages (any tag can read the DOM).
+
+
+## Vue 3 / Nuxt
+
+Same invariants as React, different sinks and one different framing model.
+
+- `v-html="x"` is `dangerouslySetInnerHTML`: only safe after DOMPurify, applied at render to *that* value. `v-bind:href`/`:src` with a user value allows `javascript:` — validate the protocol.
+- Render functions and `<component :is>` fed user data; `innerHTML`/`insertAdjacentHTML` in directives or composables.
+- Nuxt: `runtimeConfig.public` is serialized into the client payload — treat it exactly like `NEXT_PUBLIC_`. Secrets belong in `runtimeConfig` (private) only.
+- Nuxt `server/api/*.ts` handlers are the API: each needs its own authn + authz + validation. Route middleware in `middleware/` is client-side unless it's `server/middleware/`, and it is still not an authz boundary — authorize in the handler or the data layer.
+- Nuxt `useAsyncData`/`useFetch` results are hydrated into the page payload: whatever the server fetched is readable in the browser.
+- `navigateTo()` / `useRouter().push()` with a query-derived target → open redirect (`//evil.tld`, `javascript:`).
+- `routeRules` with `swr`/`isr` caching on authenticated pages → cross-user response reuse.
+
+## Svelte / SvelteKit
+
+- `{@html ...}` is the XSS sink; sanitize with DOMPurify or don't render HTML. `{@html}` from markdown is the common case.
+- Svelte escapes normal `{expr}` interpolation — do not report it.
+- `+page.server.ts` / `+layout.server.ts` `load` returns are serialized into the page: same leak as RSC props. Anything returned is public — no secrets, no other users' rows, no internal flags.
+- `+page.server.ts` **form actions** (`export const actions = {...}`) compile to public POST endpoints. Each one needs authentication, object-level authorization, and schema validation — never inherit it from the page that renders the form.
+- `hooks.server.ts` `handle()` is the middleware equivalent: it populates `event.locals`, it does not authorize per route. Check that handlers read `locals.user` and enforce ownership; a populated `locals` with an unchecked route is the SvelteKit version of CVE-2025-29927's lesson.
+- CSRF: SvelteKit's `csrf.checkOrigin` (on by default) covers form actions. Disabling it, or accepting `application/json` state-changing requests without an origin check, is a finding.
+- `+server.ts` endpoints (`GET`/`POST` exports) are public — same per-handler rule.
+- `PUBLIC_`-prefixed Vite env vars are inlined into the client bundle; anything without the prefix that is referenced in client code still ships if the bundler inlines it.
+- `ssr = false` / prerendered pages change *where* data is fetched, not who may fetch it — a client-side fetch to an unprotected endpoint is still unprotected.
+- `adapter-*` and `vite.config` `define` entries that inject secrets at build time.
 
 ## Starter greps
 

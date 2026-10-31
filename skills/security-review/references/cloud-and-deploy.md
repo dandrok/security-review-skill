@@ -34,7 +34,7 @@ The recurring theme: **the app is a thin layer over permissive infrastructure**,
 
 ## Serverless and edge config
 
-- Vercel/Netlify: env vars without the "sensitive" flag are readable in build logs and by any collaborator; `NEXT_PUBLIC_` handled per `client-react.md`.
+- Vercel/Netlify: env vars without the "sensitive" flag are readable in build logs and by any collaborator; `NEXT_PUBLIC_` handled per `client-web.md`.
 - Preview deployments: publicly accessible, built with production env vars, and unprotected by SSO — this leaks data and is a common real finding.
 - Function timeouts/memory unbounded and a public route that does heavy work → cost amplification (a finding when the cost is nameable).
 - Edge middleware caching personalized responses; `Cache-Control: s-maxage` on authenticated JSON.

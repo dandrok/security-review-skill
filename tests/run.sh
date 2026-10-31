@@ -64,7 +64,7 @@ printf 'NEXT_PUBLIC_STRIPE_SECRET_KEY=%s%s\n' "$FIXTURE_KEY_PREFIX" "$FIXTURE_KE
 echo "== classify-stack =="
 OUT=$(python3 "$SKILL/scripts/classify-stack.py" "$FIX")
 echo "$OUT" | grep -q "references/api-and-injection.md"; check $? "selects api pack"
-echo "$OUT" | grep -q "references/client-react.md";       check $? "selects react pack"
+echo "$OUT" | grep -q "references/client-web.md";         check $? "selects client-web pack"
 echo "$OUT" | grep -q "references/server-node.md";        check $? "selects server-node pack (nest signals)"
 echo "$OUT" | grep -q "references/sql-and-data.md";       check $? "selects sql-and-data pack (prisma/sql)"
 

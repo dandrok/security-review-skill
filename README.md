@@ -143,7 +143,7 @@ Packs:
 |---|---|
 | `api-and-injection.md` | SQL/NoSQLi, command injection, traversal/upload, SSRF, SSTI, deserialization, mass assignment, XXE, CORS/CSRF, ReDoS |
 | `auth-and-sessions.md` | IDOR/BOLA/BFLA, tenant isolation, Next middleware + server actions, sessions, JWT, OAuth/OIDC, resets/MFA, webhooks |
-| `client-react.md` | XSS sinks, sanitizers, CSP, RSC payload leaks, server actions, token storage, postMessage, cache leaks, prototype pollution |
+| `client-web.md` | XSS sinks, sanitizers, CSP, RSC and `+page.server` payload leaks, server actions/form actions, token storage, postMessage, cache leaks |
 | `secrets-and-config.md` | env/committed secrets, client bundles, logs/telemetry, CI, containers, rotation procedure |
 | `supply-chain.md` | lockfiles, install scripts, Shai-Hulud model, provenance/OIDC, CI permissions, publishing |
 | `cloud-and-deploy.md` | IAM, buckets, DB exposure, containers, edge/serverless, metadata SSRF |
