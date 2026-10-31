@@ -148,6 +148,8 @@ Packs:
 | `supply-chain.md` | lockfiles, install scripts, Shai-Hulud model, provenance/OIDC, CI permissions, publishing |
 | `cloud-and-deploy.md` | IAM, buckets, DB exposure, containers, edge/serverless, metadata SSRF |
 | `ai-and-llm.md` | LLM Top 10 2025 + Agentic Top 10 2026, prompt injection, tools/agency, MCP review, RAG tenancy |
+| `server-node.md` | Express middleware order + `trust proxy` + Host header, Fastify schemas/encapsulation, Hono validators, Nest guards / `ValidationPipe` / serialization |
+| `sql-and-data.md` | Postgres grants + RLS (`FORCE`, `WITH CHECK`, views), SQLite file/`ATTACH` model, MySQL notes, ORM escape hatches, migrations, backups |
 
 ## Verify it yourself
 
@@ -166,7 +168,7 @@ Prove the skill's *judgement*, not just its plumbing: run it and Cloudflare's `s
 ```
 skills/security-review/
 ├── SKILL.md                  modes, routing, procedure, anti-patterns, done criteria
-├── references/               7 packs + severity rubric, schema, report template
+├── references/               9 packs + severity rubric, schema, report template
 └── scripts/
     ├── classify-stack.py     repo signals → packs
     ├── scan.sh               gitleaks + osv-scanner + local semgrep (graceful)

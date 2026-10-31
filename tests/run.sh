@@ -47,6 +47,13 @@ export default function V({ html }: { html: string }) {
 }
 EOF
 
+# stack signals for the v1.1 packs
+echo '{"collection":"@nestjs/schematics"}' > "$FIX/nest-cli.json"
+mkdir -p "$FIX/src/users" "$FIX/prisma"
+printf 'import { Controller } from "@nestjs/common";\n@Controller("users")\nexport class UsersController {}\n' > "$FIX/src/users/users.controller.ts"
+printf 'datasource db {\n  provider = "postgresql"\n}\n' > "$FIX/prisma/schema.prisma"
+printf 'CREATE POLICY tenant_isolation ON invoices USING (true);\n' > "$FIX/prisma/001_init.sql"
+
 # The fixture key is assembled at runtime on purpose: a literal provider-shaped
 # string in this repo would trip GitHub push protection and gitleaks-on-this-repo.
 # The value is synthetic and authenticates nowhere.
@@ -58,6 +65,8 @@ echo "== classify-stack =="
 OUT=$(python3 "$SKILL/scripts/classify-stack.py" "$FIX")
 echo "$OUT" | grep -q "references/api-and-injection.md"; check $? "selects api pack"
 echo "$OUT" | grep -q "references/client-react.md";       check $? "selects react pack"
+echo "$OUT" | grep -q "references/server-node.md";        check $? "selects server-node pack (nest signals)"
+echo "$OUT" | grep -q "references/sql-and-data.md";       check $? "selects sql-and-data pack (prisma/sql)"
 
 echo "== scan.sh =="
 SCAN=$(bash "$SKILL/scripts/scan.sh" --dir "$FIX" 2>&1)

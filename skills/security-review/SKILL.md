@@ -1,10 +1,10 @@
 ---
 name: security-review
-description: "Security review of a codebase, diff, or PR: find vulnerabilities that violate a real trust boundary, with source evidence, severity, and the smallest effective fix. Use for security questions, threat models, pre-merge security review, secret/dependency audits, or reviewing AI/LLM and MCP code. Write audit artifacts only when explicitly asked."
+description: "Security review of a web codebase, diff, or PR: find vulnerabilities that violate a real trust boundary, with source evidence, severity, and the smallest effective fix. Primarily TS/JS web apps — React/Next, Express/Fastify/Hono/Nest, Postgres/SQLite/MySQL — other stacks at sink level. Use for security questions, threat models, pre-merge review, secret/dependency audits, AI/LLM and MCP code. Write audit artifacts only when explicitly asked."
 license: MIT
 compatibility: [claude-code, antigravity, antigravity-cli, opencode, codex, gemini-cli, cursor, hermes]
 metadata:
-  version: 1.0.0
+  version: 1.1.0
   author: dandrok
   source: https://github.com/dandrok/security-review-skill
   frameworks: [OWASP-ASVS-5.0, OWASP-LLM-Top10-2025, OWASP-Agentic-Top10-2026, CWE]
@@ -15,6 +15,15 @@ metadata:
 Find vulnerabilities that violate a **real trust boundary**, prove each one from source, and hand back the smallest fix that closes it. This is a defensive, source-first, read-only workflow.
 
 The hard part of AI security review is not finding suspicious code — it is not reporting 40 plausible non-issues. Everything below is built around that failure mode: a candidate only becomes a finding when you can name who attacks, what they reach, and which control should have stopped it.
+
+## Covers / doesn't cover
+
+| | |
+|---|---|
+| **Strong** | TS/JS web apps: React/Next/Vite clients, Express / Fastify / Hono / Nest backends, Postgres / SQLite / MySQL data layers, plus auth, secrets, supply chain, cloud and deploy config, AI/LLM and MCP code |
+| **Generic only** | Python (Django/DRF, FastAPI, Flask), Go, PHP, Ruby, Java — the injection sink list and the auth / secrets / supply-chain packs apply; framework-specific authorization semantics do not |
+| **Not covered** | native and binary code, mobile, embedded, .NET, kernel, and anything that needs exploitation beyond a local proof |
+
 
 ## Modes
 
@@ -48,6 +57,8 @@ If the script cannot run, use the signals column below. Then read **at most four
 
 | Signal in repo | Pack to read |
 |---|---|
+| `express`/`fastify`/`hono`/`@nestjs/*` in deps, `@Controller(`, `*.module.ts`, `*.guard.ts`, `server.ts` | `references/server-node.md` |
+| `schema.prisma`, `drizzle.config.*`, `knexfile.*`, `*.sql`, `migrations/`, `supabase/`, `*.db`/`*.sqlite`, raw query calls | `references/sql-and-data.md` |
 | `package.json` with react/next/vite, `*.tsx`, `app/`, `pages/` | `references/client-react.md` |
 | HTTP handlers, routes, controllers, GraphQL/RPC schema, `express`/`fastify`/`hono`/Django/DRF/Laravel/Go net/http | `references/api-and-injection.md` |
 | Login, session, JWT, OAuth, cookies, RBAC/roles, multi-tenant columns, `middleware.ts` | `references/auth-and-sessions.md` |
@@ -179,6 +190,8 @@ python3 scripts/validate-findings.py .security-review/findings.json    # exit 1 
 | `references/supply-chain.md` | lockfiles, install scripts, registry publishing, CI permissions |
 | `references/cloud-and-deploy.md` | IAM, buckets, DB exposure, containers, headers, metadata SSRF |
 | `references/ai-and-llm.md` | prompts, RAG, tool calling, MCP servers, agent loops |
+| `references/server-node.md` | Express, Fastify, Hono, Nest: guard coverage, validation, serialization |
+| `references/sql-and-data.md` | Postgres grants/RLS/views, SQLite, MySQL, ORM escape hatches, migrations |
 | `references/reporting.md` | severity rubric, `findings.json` schema, report template |
 | `scripts/scan.sh` | deterministic secret/dependency/semgrep pass; output only |
 | `scripts/validate-findings.py` | schema, dedupe, and evidence gate before presenting |
