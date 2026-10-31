@@ -1,0 +1,10 @@
+# scan output is written into the reviewed repo, never here
+.security-review/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+
+# os
+.DS_Store

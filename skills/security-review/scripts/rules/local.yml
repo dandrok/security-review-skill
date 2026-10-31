@@ -1,0 +1,96 @@
+# Local semgrep rules for security-review. Offline, no registry fetch.
+# These are prompts for the reviewer, not verdicts: every hit still needs a
+# reachable input and a traced effect (SKILL.md step 3).
+rules:
+  - id: sr-shell-exec
+    languages: [javascript, typescript]
+    message: >-
+      Shell execution from child_process. Confirm whether any argument is
+      request-derived, and replace with an argv array (no shell).
+    severity: WARNING
+    metadata:
+      cwe: ["CWE-78"]
+    patterns:
+      - pattern-either:
+          - pattern: '$CP.exec($CMD, ...)'
+          - pattern: '$CP.execSync($CMD, ...)'
+          - pattern: '$CP.spawn($CMD, $ARGS, {..., shell: true, ...})'
+          - pattern: '$CP.spawnSync($CMD, $ARGS, {..., shell: true, ...})'
+
+  - id: sr-react-dangerous-html
+    languages: [javascript, typescript]
+    message: >-
+      dangerouslySetInnerHTML. Verify a sanitizer (DOMPurify) is applied to this
+      exact value at render, or that the input is a constant.
+    severity: WARNING
+    metadata:
+      cwe: ["CWE-79"]
+    pattern: '<$EL ... dangerouslySetInnerHTML={$X} ... />'
+
+  - id: sr-jwt-decode-no-verify
+    languages: [javascript, typescript]
+    message: >-
+      jwt.decode() does not verify the signature. Use jwt.verify() with a pinned
+      algorithm list; confirm the callee is jsonwebtoken.
+    severity: ERROR
+    metadata:
+      cwe: ["CWE-347"]
+    pattern-either:
+      - pattern: '$JWT.decode($T)'
+      - pattern: '$JWT.decode($T, $OPTS)'
+
+  - id: sr-tls-verify-disabled
+    languages: [javascript, typescript]
+    message: TLS certificate verification disabled - any MITM becomes trusted.
+    severity: ERROR
+    metadata:
+      cwe: ["CWE-295"]
+    pattern-either:
+      - pattern: '$OPTS(..., {..., rejectUnauthorized: false, ...}, ...)'
+      - pattern: '$X.rejectUnauthorized = false'
+      - pattern: '$ENV.NODE_TLS_REJECT_UNAUTHORIZED = "0"'
+
+  - id: sr-dynamic-code-exec
+    languages: [javascript, typescript]
+    message: >-
+      Dynamic code execution. Confirm the string cannot contain request data -
+      eval and new Function are both full code execution.
+    severity: WARNING
+    metadata:
+      cwe: ["CWE-95"]
+    pattern-either:
+      - pattern: 'eval(...)'
+      - pattern: 'new Function(...)'
+      - pattern: 'vm.runInNewContext(...)'
+      - pattern: 'vm.runInThisContext(...)'
+
+  - id: sr-python-yaml-unsafe
+    languages: [python]
+    message: yaml.load without SafeLoader can construct arbitrary objects; use yaml.safe_load.
+    severity: ERROR
+    metadata:
+      cwe: ["CWE-502"]
+    pattern-either:
+      - pattern: 'yaml.load($X)'
+      - pattern: 'yaml.load($X, Loader=yaml.Loader)'
+
+  - id: sr-python-tls-verify-off
+    languages: [python]
+    message: verify=False disables certificate validation.
+    severity: ERROR
+    metadata:
+      cwe: ["CWE-295"]
+    pattern: '$REQ(..., verify=False, ...)'
+
+  - id: sr-open-redirect
+    languages: [javascript, typescript]
+    message: >-
+      Redirect target taken from the request. Allowlist same-origin paths only;
+      reject "//", "\\", and protocol-relative or scheme-qualified values.
+    severity: WARNING
+    metadata:
+      cwe: ["CWE-601"]
+    pattern-either:
+      - pattern: '$RES.redirect($REQ.query.$P)'
+      - pattern: '$RES.redirect($REQ.params.$P)'
+      - pattern: '$RES.redirect($REQ.body.$P)'

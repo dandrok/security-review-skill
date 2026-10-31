@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "target": {"name": "bad-example"},
+  "mode": "audit",
+  "findings": [
+    {
+      "id": "SR-001",
+      "verdict": "confirmed",
+      "title": "No evidence, no reproduction, severity missing",
+      "principal": "user",
+      "boundary": "x",
+      "entry_point": "a.ts:1",
+      "control_gap": "none",
+      "effect": "bad",
+      "evidence": [],
+      "fix": {"summary": "fix it"}
+    },
+    {
+      "id": "SR-001",
+      "verdict": "needs_validation",
+      "title": "Duplicate id and a severity that should not exist",
+      "severity": "high",
+      "principal": "user",
+      "boundary": "x",
+      "question": "is it on?"
+    },
+    {
+      "id": "SR-002",
+      "verdict": "confirmed",
+      "title": "Bad CWE and no reproduction",
+      "severity": "urgent",
+      "cwe": ["CWE-9999", "ace"],
+      "principal": "user",
+      "boundary": "x",
+      "entry_point": "b.ts:2",
+      "control_gap": "x",
+      "effect": "y",
+      "evidence": [{"file": "b.ts", "line": "2"}],
+      "fix": {}
+    }
+  ],
+  "coverage": [
+    {"boundary": "tenant isolation", "class": "authz", "status": "deferred"}
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "schema_version": "1.0",
+  "target": {
+    "name": "acme-web",
+    "revision": "git:4f2a1c9",
+    "scope": ["apps/web", "packages/api"]
+  },
+  "mode": "audit",
+  "generated_at": "2026-10-31T12:00:00Z",
+  "packs": ["client-react", "auth-and-sessions", "secrets-and-config"],
+  "findings": [
+    {
+      "id": "SR-001",
+      "verdict": "confirmed",
+      "title": "Any authenticated user can download another tenant's invoice PDF",
+      "severity": "critical",
+      "confidence": "high",
+      "cwe": ["CWE-639", "CWE-284"],
+      "owasp": ["A01:2021", "API1:2023"],
+      "principal": "authenticated user of tenant B",
+      "boundary": "tenant isolation",
+      "entry_point": "GET /api/invoices/:id/download (app/api/invoices/[id]/download/route.ts:14)",
+      "control_gap": "the handler loads the invoice by id only, with no tenantId predicate and no ownership check before signing the download URL (route.ts:22-27)",
+      "effect": "returns a signed download URL for any invoice id, including invoices belonging to other tenants",
+      "reproduction": "1. sign in as a tenant B user. 2. request a tenant A invoice id. 3. receive a valid signed URL and the PDF.",
+      "evidence": [
+        {"file": "app/api/invoices/[id]/download/route.ts", "line": 22, "note": "findUnique({ where: { id } }) with no tenant predicate"},
+        {"file": "app/api/invoices/[id]/download/route.ts", "line": 27, "note": "signed URL returned before any ownership check"}
+      ],
+      "fix": {
+        "summary": "scope the lookup to the session tenant; 404 (not 403) to avoid confirming existence",
+        "diff_or_patch": "- const inv = await db.invoice.findUnique({ where: { id } })\n+ const inv = await db.invoice.findFirst({ where: { id, tenantId: session.tenantId } })\n+ if (!inv) return NextResponse.json({ error: 'not found' }, { status: 404 })",
+        "test": "tenant B requesting a tenant A invoice id returns 404 with no download URL"
+      },
+      "notes": "systemic fix: a repository layer that requires a tenant argument in its type signature"
+    },
+    {
+      "id": "SR-002",
+      "verdict": "confirmed",
+      "title": "Markdown renderer allows raw HTML, enabling stored XSS in shared notes",
+      "severity": "high",
+      "confidence": "high",
+      "cwe": ["CWE-79"],
+      "owasp": ["A03:2021"],
+      "principal": "any user who can create a note read by a colleague",
+      "boundary": "author → reader",
+      "entry_point": "components/Markdown.tsx:9 (ReactMarkdown with rehypeRaw)",
+      "control_gap": "rehypeRaw re-enables raw HTML in markdown and no sanitizer is applied to the rendered tree (Markdown.tsx:9-12)",
+      "effect": "an <img src=x onerror=...> payload in a note executes in the reader's session; the session cookie is httpOnly but the app exposes an authed fetch, so data can be exfiltrated",
+      "reproduction": "1. create a note containing an img tag with an onerror handler. 2. have another user open the note. 3. handler runs with the reader's session.",
+      "evidence": [
+        {"file": "components/Markdown.tsx", "line": 9, "note": "rehypePlugins={[rehypeRaw]}"},
+        {"file": "components/Markdown.tsx", "line": 12, "note": "no rehype-sanitize in the plugin chain"}
+      ],
+      "fix": {
+        "summary": "drop rehypeRaw, or add rehype-sanitize with an allowlist schema",
+        "diff_or_patch": "- rehypePlugins={[rehypeRaw]}\n+ rehypePlugins={[rehypeRaw, [rehypeSanitize, schema]]}",
+        "test": "rendering a note with an onerror attribute produces no event handler in the DOM"
+      }
+    },
+    {
+      "id": "SR-003",
+      "verdict": "needs_validation",
+      "title": "Possible cross-tenant read in analytics export",
+      "confidence": "medium",
+      "cwe": ["CWE-639"],
+      "principal": "tenant admin",
+      "boundary": "tenant isolation",
+      "entry_point": "app/api/export/route.ts:31",
+      "control_gap": "the export query filters by workspaceId from the request body; whether it is compared to the session workspace depends on a helper in packages/api/src/scope.ts that reads a feature flag",
+      "effect": "if the flag is off, an admin could export another workspace's rows",
+      "question": "Is FEATURE_STRICT_WORKSPACE_SCOPE enabled in production? scope.ts falls back to the client-supplied workspaceId when it is off.",
+      "evidence": [
+        {"file": "app/api/export/route.ts", "line": 31, "note": "workspaceId taken from body"},
+        {"file": "packages/api/src/scope.ts", "line": 12, "note": "fallback branch"}
+      ],
+      "fix": {
+        "summary": "scope by session regardless of the flag; treat the flag as removed",
+        "test": "export with a foreign workspaceId in the body returns only session-scoped rows"
+      }
+    },
+    {
+      "id": "SR-004",
+      "verdict": "rejected",
+      "title": "JWT stored in localStorage",
+      "principal": "browser user",
+      "boundary": "author → reader",
+      "entry_point": "lib/auth-client.ts:18",
+      "rejection_reason": "the app sets a nonce-based CSP with no unsafe-inline, renders no user HTML after SR-002 is fixed, and loads no third-party scripts — reachability of the token by script is not demonstrated. Keep as defence-in-depth note, not a finding."
+    }
+  ],
+  "coverage": [
+    {"boundary": "tenant isolation", "class": "object-level authorization", "status": "covered", "finding_ids": ["SR-001", "SR-003"]},
+    {"boundary": "author → reader", "class": "stored XSS", "status": "covered", "finding_ids": ["SR-002"]},
+    {"boundary": "internet → API", "class": "injection (SQL/command)", "status": "covered", "finding_ids": []},
+    {"boundary": "internet → API", "class": "SSRF", "status": "covered", "finding_ids": []},
+    {"boundary": "CI → registry", "class": "supply chain", "status": "covered", "finding_ids": []},
+    {"boundary": "webhook in", "class": "signature/replay", "status": "deferred", "reason": "the provider is chosen by the customer at runtime and the signing config is not in this repo"}
+  ]
+}
