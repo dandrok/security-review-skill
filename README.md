@@ -41,10 +41,10 @@ Measured with the o200k tokenizer, not estimated:
 | Part | Tokens | When |
 |---|---|---|
 | Catalog entry (name + description) | 104 | every turn, always |
-| `SKILL.md` body | 3,417 | when the skill triggers |
+| `SKILL.md` body | 3,452 | when the skill triggers |
 | One reference pack | 1,494–3,089 | only if the pack is selected |
-| All 10 docs at once | ~25,600 | never; the routing step caps it at 4 |
-| `scripts/*` (6,399 total) | **0** | scripts run, their code never enters context — only the summary lines |
+| All 10 docs at once | ~26,400 | never; the routing step caps it at 4 |
+| `scripts/*` (7,265 total) | **0** | scripts run, their code never enters context — only the summary lines |
 
 Typical review: **~8–13k tokens once** (body + 2–4 packs), versus ~55k tokens *per request* for an equivalent set of eagerly-loaded MCP servers. Loading more packs does not make it smarter; step 1 exists to load *fewer*.
 
