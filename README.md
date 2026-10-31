@@ -2,7 +2,7 @@
 
 A portable Agent Skill that turns a coding agent into a security reviewer that **does not hallucinate findings**.
 
-One skill, seven reference packs, three deterministic scripts. Works in Antigravity (IDE + CLI), Claude Code, OpenCode, Codex, Gemini CLI, Cursor, and Hermes — same folder, no rewrite.
+One skill, nine reference packs, three deterministic scripts. Works in Antigravity (IDE + CLI), Claude Code, OpenCode, Codex, Gemini CLI, Cursor, and Hermes — same folder, no rewrite.
 
 ## Contents
 
@@ -40,13 +40,13 @@ Measured with the o200k tokenizer, not estimated:
 
 | Part | Tokens | When |
 |---|---|---|
-| Catalog entry (name + description) | 72 | every turn, always |
-| `SKILL.md` body | 3,081 | when the skill triggers |
-| One reference pack | 1,494–2,717 | only if the pack is selected |
-| All 8 docs at once | ~16,500 | never; the routing step caps it at 4 |
-| `scripts/*` (6,230 total) | **0** | scripts run, their code never enters context — only the summary lines |
+| Catalog entry (name + description) | 104 | every turn, always |
+| `SKILL.md` body | 3,417 | when the skill triggers |
+| One reference pack | 1,494–3,089 | only if the pack is selected |
+| All 10 docs at once | ~25,600 | never; the routing step caps it at 4 |
+| `scripts/*` (6,399 total) | **0** | scripts run, their code never enters context — only the summary lines |
 
-Typical review: **~9–11k tokens once**, versus ~55k tokens *per request* for an equivalent set of eagerly-loaded MCP servers. Loading more packs does not make it smarter; step 1 exists to load *fewer*.
+Typical review: **~8–13k tokens once** (body + 2–4 packs), versus ~55k tokens *per request* for an equivalent set of eagerly-loaded MCP servers. Loading more packs does not make it smarter; step 1 exists to load *fewer*.
 
 For scale: Cloudflare's `security-audit` is 4,447 for its body and 31,739 across its 14 reference files — it is a full-audit instrument for any target type. This one is a third of the surface, aimed at the stacks you actually ship.
 
