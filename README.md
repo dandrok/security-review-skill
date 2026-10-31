@@ -52,12 +52,29 @@ For scale: Cloudflare's `security-audit` is 4,447 for its body and 31,739 across
 
 ## Install
 
+The usual path — one command, it detects your agents and symlinks the skill so `git pull` updates it:
+
+```bash
+npx skills add dandrok/security-review-skill                     # pick agents interactively
+npx skills add dandrok/security-review-skill -g                  # global, not just this project
+npx skills add dandrok/security-review-skill -a claude-code -a antigravity-cli
+```
+
+GitHub's own installer does the same without Node (`gh` ≥ 2.102, preview):
+
+```bash
+gh skill install dandrok/security-review-skill --agent claude-code
+gh skill install dandrok/security-review-skill --agent antigravity-cli
+```
+
+Neither of those available? Clone and run the bundled script — it also does every agent in one shot, and its `--dry-run` shows exactly what it would touch:
+
 ```bash
 git clone https://github.com/dandrok/security-review-skill
 cd security-review-skill
-bash install.sh --agent all          # symlink into every agent dir it finds
-bash install.sh --agent antigravity-cli   # just one
-bash install.sh --dry-run            # show what it would touch
+bash install.sh --agent all              # symlink into every agent dir it finds
+bash install.sh --agent antigravity-cli  # just one
+bash install.sh --dry-run                # change nothing, print the plan
 ```
 
 Manual (any agent, one line each):
@@ -78,7 +95,6 @@ Or install through GitHub's CLI, which knows every agent's layout:
 gh skill install dandrok/security-review-skill --agent antigravity-cli
 gh skill install dandrok/security-review-skill --agent claude-code
 ```
-
 Notes:
 
 - Antigravity scans **one level deep**: the skill folder must sit directly inside `skills/`.
@@ -87,6 +103,8 @@ Notes:
 - Hermes builds its skill index at session start — a new session picks it up.
 - Optional scanners (`gitleaks`, `osv-scanner`, `semgrep`) are detected at runtime. Missing ones are reported as skipped, never as clean.
 
+- `npx skills` collects anonymous install telemetry by default; `DISABLE_TELEMETRY=1` opts out.
+- Whichever route you use, the whole folder goes with it — `references/` and `scripts/` are what make the packs and the scanners work.
 ## Use
 
 The skill triggers on the description; you can also invoke it explicitly.
