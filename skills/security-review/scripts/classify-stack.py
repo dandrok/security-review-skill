@@ -112,6 +112,11 @@ SIGNALS = {
         ("**/*embedding*", "embeddings"),
         ("**/*rag*", "RAG"),
     ],
+    "references/rust-cli.md": [
+        ("Cargo.toml", "Cargo manifest"),
+        ("**/*.rs", "Rust source"),
+        ("build.rs", "build script"),
+    ],
 }
 
 
@@ -138,6 +143,16 @@ DEP_SIGNALS = {
         "openai", "@anthropic-ai/sdk", "langchain", "@modelcontextprotocol/sdk",
         "ai", "@ai-sdk/openai", "llamaindex",
     },
+}
+# Crate names in Cargo.toml that change which pack applies.
+CARGO_DEP_SIGNALS = {
+    "axum": "references/api-and-injection.md",
+    "actix-web": "references/api-and-injection.md",
+    "rocket": "references/api-and-injection.md",
+    "warp": "references/api-and-injection.md",
+    "sqlx": "references/sql-and-data.md",
+    "diesel": "references/sql-and-data.md",
+    "rusqlite": "references/sql-and-data.md",
 }
 PY_DEP_SIGNALS = {
     "django": "references/api-and-injection.md",
@@ -183,6 +198,23 @@ def read_deps(root: str) -> set[str]:
             for dep in PY_DEP_SIGNALS:
                 if f'"{dep}' in text or f"'{dep}" in text:
                     names.add(dep)
+        except Exception:
+            pass
+    cargo = os.path.join(root, "Cargo.toml")
+    if os.path.isfile(cargo):
+        try:
+            in_deps = False
+            for line in open(cargo, encoding="utf-8", errors="ignore"):
+                stripped = line.strip()
+                if stripped.startswith("["):
+                    in_deps = stripped.startswith(
+                        ("[dependencies", "[dev-dependencies", "[build-dependencies")
+                    )
+                    continue
+                if in_deps:
+                    m = _re.match(r"^([A-Za-z0-9_-]+)\s*=", stripped)
+                    if m:
+                        names.add(m.group(1).lower())
         except Exception:
             pass
     return names
@@ -245,6 +277,12 @@ def main() -> int:
         dep_hits = sorted(d for d in deps if d in DEP_SIGNALS.get(pack, set()))
         if dep_hits:
             hits.append("deps: " + ", ".join(dep_hits))
+        crate_hits = sorted(
+            name for name, target in CARGO_DEP_SIGNALS.items()
+            if target == pack and name in deps
+        )
+        if crate_hits:
+            hits.append("crates: " + ", ".join(crate_hits))
         if hits:
             found[pack] = hits
 

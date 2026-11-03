@@ -4,7 +4,7 @@ description: "Use when reviewing code for exploitable holes."
 license: MIT
 compatibility: [claude-code, antigravity, antigravity-cli, opencode, codex, gemini-cli, cursor, hermes]
 metadata:
-  version: 1.2.1
+  version: 1.3.0
   author: dandrok
   source: https://github.com/dandrok/security-review-skill
   frameworks: [OWASP-ASVS-5.0, OWASP-LLM-Top10-2025, OWASP-Agentic-Top10-2026, CWE]
@@ -22,6 +22,7 @@ The hard part of AI security review is not finding suspicious code — it is not
 |---|---|
 | **Strong** | TS/JS web apps: React/Next, Vue/Nuxt, Svelte/SvelteKit clients, Express / Fastify / Hono / Nest backends, Postgres / SQLite / MySQL data layers, plus auth, secrets, supply chain, cloud and deploy config, AI/LLM and MCP code |
 | **Generic only** | Python (Django/DRF, FastAPI, Flask), Go, PHP, Ruby, Java — the injection sink list and the auth / secrets / supply-chain packs apply; framework-specific authorization semantics do not |
+| **Rust (CLI, services, parsers)** | real sinks — panics, unbounded allocation, paths, `Command`, serde, terminal escapes, local sockets, `build.rs` — with the memory-safety class removed by the language; see `references/rust-cli.md` |
 | **Not covered** | native and binary code, mobile, embedded, .NET, kernel, and anything that needs exploitation beyond a local proof |
 
 
@@ -63,6 +64,7 @@ If the script cannot run, use the signals column below. Then read **at most four
 | HTTP handlers, routes, controllers, GraphQL/RPC schema, `express`/`fastify`/`hono`/Django/DRF/Laravel/Go net/http | `references/api-and-injection.md` |
 | Login, session, JWT, OAuth, cookies, RBAC/roles, multi-tenant columns, `middleware.ts` | `references/auth-and-sessions.md` |
 | `.env*`, config files, Dockerfile, CI YAML, logger/telemetry setup | `references/secrets-and-config.md` |
+| `Cargo.toml`, `Cargo.lock`, `*.rs`, `build.rs` | `references/rust-cli.md` |
 | `package-lock.json`/`yarn.lock`/`pnpm-lock.yaml`/`uv.lock`, `postinstall`, GH Actions, publish flow | `references/supply-chain.md` |
 | Terraform/CDK/Pulumi, S3/GCS, k8s manifests, Vercel/Netlify/Fly config, reverse proxy | `references/cloud-and-deploy.md` |
 | LLM calls, prompts, embeddings/RAG, tool calling, MCP servers, agent loops | `references/ai-and-llm.md` |
@@ -191,6 +193,7 @@ python3 scripts/validate-findings.py .security-review/findings.json    # exit 1 
 | `references/cloud-and-deploy.md` | IAM, buckets, DB exposure, containers, headers, metadata SSRF |
 | `references/ai-and-llm.md` | prompts, RAG, tool calling, MCP servers, agent loops |
 | `references/server-node.md` | Express, Fastify, Hono, Nest: guard coverage, validation, serialization |
+| `references/rust-cli.md` | Rust: panics as DoS, allocation ceilings, paths, subprocess, serde, terminal escapes, build.rs |
 | `references/sql-and-data.md` | Postgres grants/RLS/views, SQLite, MySQL, ORM escape hatches, migrations |
 | `references/reporting.md` | severity rubric, `findings.json` schema, report template |
 | `scripts/scan.sh` | deterministic secret/dependency/semgrep pass; output only |

@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.3.0 — 2026-11-03
+
+Rust coverage, written from a real review that found a real bug the pack would have
+caught sooner.
+
+- New pack `references/rust-cli.md`: panics as denial of service, allocation ceilings
+  from untrusted lengths (the `with_capacity(header.size())` class), paths, symlinks
+  and TOCTOU, `Command` vs `sh -c`, serde depth and allow-by-default fields, terminal
+  escape injection, unauthenticated loopback servers, TLS verification, `build.rs`
+  and proc macros, `cargo audit` / `cargo deny`.
+- The pack leads with what is **not** a finding in Rust — memory-safety classes and
+  `unsafe` on its own — because that is where a Rust review wastes its report.
+- Coverage table now names Rust instead of lumping it into "not covered".
+- `classify-stack.py` reads `Cargo.toml`: `*.rs`, `Cargo.toml` and `build.rs` route to
+  the Rust pack, and crate names route too (axum/actix-web/rocket/warp to
+  api-and-injection, sqlx/diesel/rusqlite to sql-and-data).
+- `tests/run.sh` asserts both the file routing and the crate routing.
+
 ## 1.2.0 — 2026-10-31
 
 Routing accuracy for frontend stacks that are not React, plus dependency-aware detection.

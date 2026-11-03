@@ -68,6 +68,24 @@ echo "$OUT" | grep -q "references/client-web.md";         check $? "selects clie
 echo "$OUT" | grep -q "references/server-node.md";        check $? "selects server-node pack (nest signals)"
 echo "$OUT" | grep -q "references/sql-and-data.md";       check $? "selects sql-and-data pack (prisma/sql)"
 
+# Rust: a Cargo manifest and crate names must route to the rust pack.
+RUST=$(mktemp -d)/fixture-rust
+mkdir -p "$RUST/src"
+cat > "$RUST/Cargo.toml" <<'EOF'
+[package]
+name = "fixture"
+version = "0.1.0"
+
+[dependencies]
+axum = "0.8"
+rusqlite = "0.41"
+EOF
+printf 'fn main() {}\n' > "$RUST/src/main.rs"
+OUT=$(python3 "$SKILL/scripts/classify-stack.py" "$RUST")
+echo "$OUT" | grep -q "references/rust-cli.md";  check $? "selects rust-cli pack (Cargo.toml + *.rs)"
+echo "$OUT" | grep -q "crates: .*axum";          check $? "routes axum to the api pack"
+echo "$OUT" | grep -q "crates: .*rusqlite";      check $? "routes rusqlite to the data pack"
+
 echo "== scan.sh =="
 SCAN=$(bash "$SKILL/scripts/scan.sh" --dir "$FIX" 2>&1)
 echo "$SCAN" | grep -Eq "gitleaks *: [1-9]";  check $? "gitleaks reports a secret"
