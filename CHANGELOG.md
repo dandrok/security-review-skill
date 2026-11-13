@@ -35,6 +35,13 @@ that does not have the three scanners.
   to go red with its fix reverted.
 - README token counts re-measured with `o200k_base` (`SKILL.md` 3,765; all 11 docs ~24,900;
   scripts 8,618).
+- **README rewritten, then cut to size.** It answers three questions — why the skill exists, how to
+  install it, what it covers — with the agent-install prompt first (paste the repo URL, the agent
+  copies the folder and confirms), then `gh skill install` for the 48 harness layouts it knows, then
+  `install.sh` for offline/Hermes. Reference material moved out: per-harness paths and the four
+  gotchas to `docs/install.md`, the pack index to `docs/packs.md`. 139 lines, against 187 before and
+  Cloudflare's 106. Dropped `npx skills`: an unpinned `npx` of a third-party package is the
+  install-time risk this skill's own supply-chain pack tells you to flag.
 
 ## 1.3.0 — 2026-11-03
 
