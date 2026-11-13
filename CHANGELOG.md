@@ -35,6 +35,12 @@ that does not have the three scanners.
   to go red with its fix reverted.
 - README token counts re-measured with `o200k_base` (`SKILL.md` 3,765; all 11 docs ~24,900;
   scripts 8,618).
+- **README rewritten** around the three questions a reader actually has: why the skill exists, how to
+  install it, and what it covers. The agent-install prompt leads (paste the repo URL, the agent does
+  the rest), then `gh skill install` for the 48 harness layouts it knows, then `install.sh` for
+  offline/Hermes, then the per-harness path table as the escape hatch. Dropped `npx skills`: an
+  unpinned `npx` of a third-party package is the install-time risk this skill's own supply-chain pack
+  tells you to flag.
 
 ## 1.3.0 — 2026-11-03
 
