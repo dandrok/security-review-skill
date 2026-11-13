@@ -87,7 +87,8 @@ Field rules:
 
 - `id` — `SR-<n>`, stable across runs; the same finding keeps its id.
 - `cwe` — array, real CWE ids only (`CWE-79`, `CWE-639`). Prefer the most specific.
-- `evidence` — at least one `file`+`line` for `confirmed`. No evidence, no `confirmed`.
+- `evidence` — at least one `file`+`line` for `confirmed`. No evidence, no `confirmed`. With `--root <tree>` the file must exist there and the line must be inside it: a citation the reader cannot open is a guess, and the validator treats it as one.
+- `control_gap` — must carry a `file:line` (or `file:a-b`) for `confirmed`. "No check exists" is a claim about a place; without a line it is an impression.
 - `reproduction` — steps, not a payload dump; no live target, no real secret.
 - `fix.diff_or_patch` — the minimal change. Never a full-file rewrite.
 - `coverage` — audit mode only; every boundary from Step 2 appears as `covered` or `deferred` with a reason. A missing row is an audit hole.
@@ -142,7 +143,7 @@ re-reporting the same non-issues, and it is evidence the review had coverage.
 [↑ contents](#contents)
 
 ## Method
-Packs loaded, scans run (`gitleaks`, `osv-scanner`, `semgrep` — with what was skipped and why),
+Packs loaded, scans run (`gitleaks`, `osv-scanner`, `semgrep`) with the coverage line (`n/3 scanners reported`, and what was skipped, missing or errored),
 limits (read-only source, no live targets, sandboxed), and the revision reviewed.
 ```
 
@@ -160,7 +161,7 @@ Three to eight lines. No preamble, no methodology essay. If there is nothing, sa
 ## Before presenting
 
 ```bash
-python3 scripts/validate-findings.py .security-review/findings.json
+python3 scripts/validate-findings.py .security-review/findings.json --root .
 ```
 
-Exit 1 means: schema violation, missing evidence on a `confirmed`, severity on a `needs_validation`, duplicate id, or an uncovered boundary. Fix the report, do not present it anyway.
+Exit 1 means: schema violation, missing evidence on a `confirmed`, a `control_gap` with no line cited, severity on a `needs_validation`, duplicate id, an uncovered boundary, a coverage row naming a finding that does not exist, or — with `--root` — an evidence file that is not in the tree or a line past the end of it. Fix the report, do not present it anyway.
