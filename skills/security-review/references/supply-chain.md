@@ -39,7 +39,7 @@ git log --oneline --author=".*\[bot\]" --since="3 months ago"
 | `npm audit`/`osv-scanner` output triaged, not pasted | CVE count is not a finding list; reachability decides |
 | Python: `requirements.txt` unpinned, `--extra-index-url` present (dependency confusion), setup.py `install_requires` from URLs | same class, other ecosystem |
 
-Dependency CVEs: run `osv-scanner` and map each hit to *usage*. A vulnerable `lodash.template` in a code path nobody calls is low. `scripts/scan.sh` collects this; report exploitable ones only, and list the rest as a count.
+Dependency CVEs: run `osv-scanner` and map each hit to *usage*. A vulnerable `lodash.template` in a code path nobody calls is low. `scripts/scan.sh` collects this; report exploitable ones only, and list the rest as a count. Its exit 3 means a scanner was missing or crashed — a coverage hole, not a clean lockfile; say so instead of writing "no advisories".
 
 ## Install-time execution
 

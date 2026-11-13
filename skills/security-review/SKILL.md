@@ -4,7 +4,7 @@ description: "Use when reviewing code for exploitable holes."
 license: MIT
 compatibility: [claude-code, antigravity, antigravity-cli, opencode, codex, gemini-cli, cursor, hermes]
 metadata:
-  version: 1.3.0
+  version: 1.3.1
   author: dandrok
   source: https://github.com/dandrok/security-review-skill
   frameworks: [OWASP-ASVS-5.0, OWASP-LLM-Top10-2025, OWASP-Agentic-Top10-2026, CWE]
@@ -34,7 +34,7 @@ Loading this skill authorizes nothing else. Pick the mode from the request; if i
 |---|---|---|---|
 | **quick** | "is this safe?", a diff, one file, a specific worry | 1–2 | nothing; answer in chat |
 | **review** | "security review this PR/branch/service" | 2–4 | `.security-review/findings.md` if asked |
-| **audit** | "audit", "full/comprehensive/end-to-end", "pen-test", "report" | 3–5 | `findings.json` + `REPORT.md` + coverage ledger |
+| **audit** | "audit", "full/comprehensive/end-to-end", "pen-test", "report" | 3–4 | `findings.json` + `REPORT.md` + coverage ledger |
 
 Never run audit phases because the skill loaded. Never create a directory in quick mode.
 
@@ -92,6 +92,22 @@ Two properties to check on this map, because they generate most real findings:
 2. **A gap between what one component guarantees and what the next assumes.** Client validates, server trusts. Gateway authenticates, app authorizes by header. ORM scopes by tenant, raw query does not.
 
 ## Step 3 — Hunt: invariant first
+
+### Run the deterministic scanners first (review and audit, not quick)
+
+```bash
+bash scripts/scan.sh --dir . --strict    # reports go to .security-review/scans/, not into your context
+```
+
+Read the **coverage line**, never the exit code alone:
+
+| exit | meaning | what to do |
+|---|---|---|
+| 0 | ran at whatever coverage was available | read the coverage line; incomplete coverage is not a clean result |
+| 1 | `--strict` and scanners reported hits | triage every hit by reachability — a hit is not a finding |
+| 3 | `--strict` and coverage is incomplete | name the missing or errored scanner in the report; never write "scans clean" |
+
+A scanner that is not installed, or one that crashed, is a hole in the audit. `--skip` records a deliberate omission and does not open one; a missing binary does. `scanners_run` and the `coverage` object in `scan-summary.json` carry the same facts if you want an assertion instead of a reading.
 
 For every candidate, walk this loop. Stop when the invariant is settled either way.
 
@@ -155,7 +171,7 @@ If the correct fix is architectural ("authorize in the query, not in middleware"
 **Audit:** `findings.json` (schema in `references/reporting.md`), `REPORT.md`, and the coverage ledger. Validate before presenting:
 
 ```bash
-python3 scripts/validate-findings.py .security-review/findings.json    # exit 1 = do not present yet
+python3 scripts/validate-findings.py .security-review/findings.json --root .   # exit 1 = do not present yet
 ```
 
 **Coverage ledger (audit only).** Enumerate boundaries × the classes you considered, and mark each `covered` or `deferred: <reason>`. A boundary that is neither is a hole in the audit, not a clean bill of health. Carry prior ledgers forward: re-check changed source, keep current evidence, never treat a stale `deferred` as covered.
@@ -174,11 +190,12 @@ python3 scripts/validate-findings.py .security-review/findings.json    # exit 1 
 ## Done criteria
 
 - [ ] Mode chosen and stated; no artifacts written outside review/audit
-- [ ] Packs selected from signals, stated, and ≤4 loaded
+- [ ] Packs selected from signals, stated, and ≤4 loaded (audit included — the cap does not grow with the mode)
 - [ ] Trust boundaries written; every boundary either covered or explicitly deferred
 - [ ] Every finding has principal, entry point, control gap (`file:line`), effect, severity, fix, regression test
 - [ ] Every candidate either confirmed, `needs_validation` with a specific question, or rejected with a reason
-- [ ] Greps/scans run (see `references/supply-chain.md` and `scripts/scan.sh`) and reported even when clean
+- [ ] `scan.sh` run in review/audit mode; its coverage line reported as-is — a missing or errored scanner named, never read as clean
+- [ ] `findings.json` validated with `--root <tree>`, so no evidence cites a file or line that does not exist
 - [ ] No live secret or PII in any output; no live target contacted; no unsandboxed target code executed
 
 ## Files
@@ -196,8 +213,8 @@ python3 scripts/validate-findings.py .security-review/findings.json    # exit 1 
 | `references/rust-cli.md` | Rust: panics as DoS, allocation ceilings, paths, subprocess, serde, terminal escapes, build.rs |
 | `references/sql-and-data.md` | Postgres grants/RLS/views, SQLite, MySQL, ORM escape hatches, migrations |
 | `references/reporting.md` | severity rubric, `findings.json` schema, report template |
-| `scripts/scan.sh` | deterministic secret/dependency/semgrep pass; output only |
-| `scripts/validate-findings.py` | schema, dedupe, and evidence gate before presenting |
+| `scripts/scan.sh` | deterministic secret/dependency/semgrep pass; exit 3 = coverage hole; output only |
+| `scripts/validate-findings.py` | schema, dedupe, evidence and `--root` citation gate before presenting |
 | `scripts/classify-stack.py` | pack selection from repo signals |
 
 ## Attribution

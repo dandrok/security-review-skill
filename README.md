@@ -2,7 +2,7 @@
 
 A portable Agent Skill that turns a coding agent into a security reviewer that **does not hallucinate findings**.
 
-One skill, nine reference packs, three deterministic scripts. Works in Antigravity (IDE + CLI), Claude Code, OpenCode, Codex, Gemini CLI, Cursor, and Hermes — same folder, no rewrite.
+One skill, ten reference packs, three deterministic scripts. Works in Antigravity (IDE + CLI), Claude Code, OpenCode, Codex, Gemini CLI, Cursor, and Hermes — same folder, no rewrite.
 
 ## Contents
 
@@ -41,12 +41,12 @@ Measured with the o200k tokenizer, not estimated:
 | Part | Tokens | When |
 |---|---|---|
 | Catalog entry (name + description) | 104 | every turn, always |
-| `SKILL.md` body | 3,452 | when the skill triggers |
+| `SKILL.md` body | 3,765 | when the skill triggers |
 | One reference pack | 1,494–3,089 | only if the pack is selected |
-| All 10 docs at once | ~26,400 | never; the routing step caps it at 4 |
-| `scripts/*` (7,265 total) | **0** | scripts run, their code never enters context — only the summary lines |
+| All 11 docs at once | ~24,900 | never; the routing step caps it at 4 |
+| `scripts/*` (8,618 total) | **0** | scripts run, their code never enters context — only the summary lines |
 
-Typical review: **~8–13k tokens once** (body + 2–4 packs), versus ~55k tokens *per request* for an equivalent set of eagerly-loaded MCP servers. Loading more packs does not make it smarter; step 1 exists to load *fewer*.
+Typical review: **~7–16k tokens once** (body + 2–4 packs), versus ~55k tokens *per request* for an equivalent set of eagerly-loaded MCP servers. Loading more packs does not make it smarter; step 1 exists to load *fewer*.
 
 For scale: Cloudflare's `security-audit` is 4,447 for its body and 31,739 across its 14 reference files — it is a full-audit instrument for any target type. This one is a third of the surface, aimed at the stacks you actually ship.
 
@@ -156,10 +156,11 @@ Packs:
 The repo ships a deliberately vulnerable fixture so you can check the scanners produce real output instead of decorating the README:
 
 ```bash
-bash tests/run.sh          # builds the fixture, runs scan.sh, asserts each scanner reports
+bash tests/run.sh          # builds the fixture, runs scan.sh, asserts each scanner reports;
+                           # a scanner that is not installed reports SKIP, not FAIL
 ```
 
-Expected on this fixture: 1 secret, 5 dependency advisories, 3 local-rule hits, validator rejects the bad sample and accepts the good one.
+Expected on this fixture: 1 secret, 5 dependency advisories, 3 local-rule hits, validator rejects the bad sample and accepts the good one. With a scanner missing, that row reads `SKIP` and `bash tests/run.sh` still exits 0 — the exit code reports grading, not scanner coverage.
 
 Prove the skill's *judgement*, not just its plumbing: run it and Cloudflare's `security-audit` over the same known-vulnerable app (OWASP Juice Shop or NodeGoat) and compare confirmed findings. That's the only claim about quality worth making.
 
@@ -168,11 +169,11 @@ Prove the skill's *judgement*, not just its plumbing: run it and Cloudflare's `s
 ```
 skills/security-review/
 ├── SKILL.md                  modes, routing, procedure, anti-patterns, done criteria
-├── references/               9 packs + severity rubric, schema, report template
+├── references/               10 packs + severity rubric, schema, report template
 └── scripts/
     ├── classify-stack.py     repo signals → packs
-    ├── scan.sh               gitleaks + osv-scanner + local semgrep (graceful)
-    ├── validate-findings.py  schema/evidence/severity gate
+    ├── scan.sh               gitleaks + osv-scanner + local semgrep (exit 3 = coverage hole)
+    ├── validate-findings.py  schema/evidence/citation gate (`--root <tree>`)
     └── rules/local.yml       8 offline semgrep rules
 examples/findings.example.json   worked audit report, valid by construction
 tests/run.sh                     end-to-end check of the scripts

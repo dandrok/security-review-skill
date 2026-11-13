@@ -8,3 +8,6 @@ __pycache__/
 
 # os
 .DS_Store
+
+# scratch dir for the test fixtures and PATH stubs
+tests/.tmp/

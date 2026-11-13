@@ -18,7 +18,15 @@ SKIP_DIRS = {
     "node_modules", ".git", "dist", "build", ".next", ".nuxt", ".output",
     "vendor", ".venv", "venv", "__pycache__", ".turbo", "coverage", ".cache",
     "target", ".svelte-kit", "out", ".parcel-cache",
+    # agent config, not application code: .claude/agents/*.md is a skill file, and
+    # matching it routes a repo with no LLM surface to the ai pack
+    ".claude", ".cursor", ".codex", ".gemini",
 }
+
+# A directory called agents/ only counts when it holds code: the name is also what agent
+# config uses, and a false hit here costs a whole pack (and, at the four-pack cap,
+# displaces one that applies).
+CODE_EXTS = {".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".py", ".rs", ".go", ".rb"}
 
 # signal -> (pack, human label)
 SIGNALS = {
@@ -105,12 +113,19 @@ SIGNALS = {
     ],
     "references/ai-and-llm.md": [
         ("**/prompts/**", "prompts directory"),
-        ("**/agents/**", "agent code"),
-        ("**/tools/**", "tool definitions"),
+        ("**/agents/**", "agent code", CODE_EXTS),
         ("mcp.json", "MCP config"),
-        ("**/mcp*.{json,ts,py}", "MCP server"),
+        # one pattern per extension: fnmatch has no brace expansion, so a
+        # `**/mcp*.{json,ts,py}` entry silently matches nothing
+        ("**/mcp*.json", "MCP config"),
+        ("**/mcp*.ts", "MCP server"),
+        ("**/mcp*.py", "MCP server"),
         ("**/*embedding*", "embeddings"),
-        ("**/*rag*", "RAG"),
+        # a directory or module named rag, never a substring: `**/*rag*` matched
+        # "Average.js" and routed a katas repo to this pack
+        ("**/rag/**", "RAG directory"),
+        ("**/rag*.py", "RAG module"),
+        ("**/rag*.ts", "RAG module"),
     ],
     "references/rust-cli.md": [
         ("Cargo.toml", "Cargo manifest"),
@@ -270,8 +285,14 @@ def main() -> int:
     found: dict[str, list[str]] = {}
     for pack, sigs in SIGNALS.items():
         hits: list[str] = []
-        for pattern, label in sigs:
-            n = sum(1 for f in files if match(f, pattern))
+        for sig in sigs:
+            pattern, label = sig[0], sig[1]
+            exts = sig[2] if len(sig) > 2 else None
+            n = sum(
+                1 for f in files
+                if match(f, pattern)
+                and (exts is None or os.path.splitext(f)[1].lower() in exts)
+            )
             if n:
                 hits.append(f"{label} ({n})")
         dep_hits = sorted(d for d in deps if d in DEP_SIGNALS.get(pack, set()))

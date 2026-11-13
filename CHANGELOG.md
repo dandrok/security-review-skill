@@ -1,5 +1,41 @@
 # Changelog
 
+## 1.3.1 — 2026-11-13
+
+The gates, made to fail where they were passing. Found by running the suite on a machine
+that does not have the three scanners.
+
+- **`scan.sh` no longer reports a clean scan it did not run.** It tracks each scanner as
+  ran / errored / not installed / deliberately skipped and prints a `coverage n/3` line on
+  every run. `--strict` now exits **3** when coverage is incomplete (it kept exit **1** for
+  real findings), and a `--skip` counts as a deliberate omission while a missing binary does
+  not. A missing `rules/` directory is a failure, not a silent skip. `scan-summary.json`
+  carries the same `coverage` object, so a caller can assert instead of read.
+- **Stale reports are cleared before scanning**, so a previous run's `gitleaks.json` cannot
+  be read as this run's evidence.
+- **`classify-stack.py` routing:** `**/*rag*` sent any file named `Average.js` to the AI pack
+  (it hit three repos on the author's machine). RAG is now a directory or a module; `agents/`
+  must contain code, because `.claude/agents/*.md` is config and not an LLM surface; the
+  over-broad `tools/` signal is gone; agent-config dirs (`.claude`, `.cursor`, `.codex`,
+  `.gemini`) are skipped. `**/mcp*.{json,ts,py}` never matched anything — `fnmatch` has no
+  brace expansion — and is now one pattern per extension.
+- **`validate-findings.py --root <tree>`** closes the hallucinated-citation hole: every
+  evidence file must exist in the reviewed tree and the line must be inside the file, a
+  `confirmed` `control_gap` must cite a line, a coverage row may not name a finding that does
+  not exist, and a path that escapes the root is rejected. Without `--root` the check stays
+  schema-only, so nothing breaks for callers that do not have the tree.
+- **`SKILL.md`:** audit mode's "3–5 packs" contradicted the four-pack cap in Step 1 and in the
+  done criteria; audit is now 3–4 and the cap says it does not grow with the mode. New step:
+  run `scan.sh` first and read its coverage line, with the exit-code table.
+- **`tests/run.sh`:** 30 assertions and 3 skips instead of 13 assertions that failed on any
+  machine without all three scanners — a missing scanner now reports SKIP and the run still
+  exits 0. New checks force the paths nobody runs by hand: no scanners on `PATH`, a crashing
+  scanner, a `--root` citation that does not resolve, an evidence line past EOF, a
+  `control_gap` with no line, and a coverage row naming an unknown finding. Each was verified
+  to go red with its fix reverted.
+- README token counts re-measured with `o200k_base` (`SKILL.md` 3,765; all 11 docs ~24,900;
+  scripts 8,618).
+
 ## 1.3.0 — 2026-11-03
 
 Rust coverage, written from a real review that found a real bug the pack would have
